@@ -27,10 +27,39 @@ public class PdfCoordinateService {
             MatchMode mode,
             boolean caseSensitive
     ) {
+        return findCoordinates(pdfInput, query, mode, caseSensitive, 150, 50);
+    }
+
+    public CoordinateSearchResponse findCoordinates(
+            InputStream pdfInput,
+            String query,
+            MatchMode mode,
+            boolean caseSensitive,
+            float width,
+            float height
+    ) {
+        if (!Float.isFinite(width) || !Float.isFinite(height) || width <= 0 || height <= 0) {
+            throw new IllegalArgumentException("Width and height must be finite positive numbers.");
+        }
         try (PDDocument document = Loader.loadPDF(pdfInput.readAllBytes())) {
+            if (document.getNumberOfPages() == 0) {
+                throw new IllegalArgumentException("The PDF must contain at least one page.");
+            }
             List<CoordinateMatch> matches = new ArrayList<>();
             for (int pageIndex = 0; pageIndex < document.getNumberOfPages(); pageIndex++) {
                 matches.addAll(findOnPage(document, pageIndex, query, mode, caseSensitive));
+            }
+            if (matches.isEmpty()) {
+                PDPage lastPage = document.getPage(document.getNumberOfPages() - 1);
+                float pageWidth = lastPage.getMediaBox().getWidth();
+                float pageHeight = lastPage.getMediaBox().getHeight();
+                if (width > pageWidth || height > pageHeight) {
+                    throw new IllegalArgumentException("Width and height must fit within the last page.");
+                }
+                matches.add(new CoordinateMatch(
+                        document.getNumberOfPages(), "", pageWidth - width, 0,
+                        width, height, pageWidth - width, pageHeight - height
+                ));
             }
             return new CoordinateSearchResponse(query, mode, matches.size(), matches);
         } catch (IOException exception) {

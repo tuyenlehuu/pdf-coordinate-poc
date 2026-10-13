@@ -21,6 +21,8 @@ The API runs at `http://localhost:8080`.
 | `query` | Yes | Text or regular expression to find |
 | `mode` | No | `CONTAINS` (default), `EXACT`, or `REGEX` |
 | `caseSensitive` | No | `false` by default |
+| `width` | No | Fallback box width in PDF points, default `150` |
+| `height` | No | Fallback box height in PDF points, default `50` |
 
 ```powershell
 curl.exe -X POST "http://localhost:8080/api/pdf/coordinates" `
@@ -52,6 +54,8 @@ Example response:
 ```
 
 `x` and `y` use the usual PDF coordinate system: origin at the **bottom-left** of the page. `topLeftX` and `topLeftY` are included for UI/browser overlays, where the origin is **top-left**.
+
+If the query is not found anywhere in the PDF (including a scanned PDF), the API returns one fallback box on the **last page** with `text: ""` and `totalMatches: 1`. Its top-left coordinates are `(pageWidth - width, pageHeight - height)`; in PDF bottom-left coordinates, `x = pageWidth - width` and `y = 0`. Page dimensions use the media box, consistent with text matches. `width` and `height` must be finite positive numbers and must fit within the last page when fallback is used. They do not change the bounding boxes of actual text matches.
 
 ## Notes
 

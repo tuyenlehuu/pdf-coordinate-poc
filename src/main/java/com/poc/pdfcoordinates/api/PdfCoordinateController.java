@@ -24,11 +24,13 @@ public class PdfCoordinateController {
             @RequestParam("file") MultipartFile file,
             @RequestParam("query") String query,
             @RequestParam(defaultValue = "CONTAINS") MatchMode mode,
-            @RequestParam(defaultValue = "false") boolean caseSensitive
+            @RequestParam(defaultValue = "false") boolean caseSensitive,
+            @RequestParam(defaultValue = "150") float width,
+            @RequestParam(defaultValue = "50") float height
     ) {
         validatePdf(file, query);
         try {
-            return pdfCoordinateService.findCoordinates(file.getInputStream(), query, mode, caseSensitive);
+            return pdfCoordinateService.findCoordinates(file.getInputStream(), query, mode, caseSensitive, width, height);
         } catch (IOException exception) {
             throw new PdfProcessingException("Could not read the uploaded PDF.", exception);
         }
